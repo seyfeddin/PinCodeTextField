@@ -9,9 +9,9 @@
 import Foundation
 import UIKit
 
-@IBDesignable open class PinCodeTextField: UIView {
+@IBDesignable public class PinCodeTextField: UIView, UITextInputTraits {
     public weak var delegate: PinCodeTextFieldDelegate?
-    
+
     //MARK: Customizable from Interface Builder
     @IBInspectable public var underlineWidth: CGFloat = 40
     @IBInspectable public var underlineHSpacing: CGFloat = 10
@@ -24,30 +24,28 @@ import UIKit
             updateView()
         }
     }
-    
+
     @IBInspectable public var fontSize: CGFloat = 14 {
         didSet {
             font = font.withSize(fontSize)
         }
     }
-    @IBInspectable public var textColor: UIColor = UIColor.clear 
+    @IBInspectable public var textColor: UIColor = UIColor.clear
     @IBInspectable public var placeholderColor: UIColor = UIColor.lightGray
     @IBInspectable public var underlineColor: UIColor = UIColor.darkGray
     @IBInspectable public var updatedUnderlineColor: UIColor = UIColor.clear
     @IBInspectable public var secureText: Bool = false
     @IBInspectable public var needToUpdateUnderlines: Bool = true
-    @IBInspectable public var characterBackgroundColor: UIColor = UIColor.clear
-    @IBInspectable public var characterBackgroundCornerRadius: CGFloat = 0
-    
+
     //MARK: Customizable from code
     public var keyboardType: UIKeyboardType = UIKeyboardType.alphabet
     public var keyboardAppearance: UIKeyboardAppearance = UIKeyboardAppearance.default
     public var autocorrectionType: UITextAutocorrectionType = UITextAutocorrectionType.no
     public var font: UIFont = UIFont.systemFont(ofSize: 14)
     public var allowedCharacterSet: CharacterSet = CharacterSet.alphanumerics
-    
+
     private var _inputView: UIView?
-    open override var inputView: UIView? {
+    public override var inputView: UIView? {
         get {
             return _inputView
         }
@@ -55,10 +53,10 @@ import UIKit
             _inputView = newValue
         }
     }
-    
+
     // UIResponder
     private var _inputAccessoryView: UIView?
-    @IBOutlet open override var inputAccessoryView: UIView? {
+    @IBOutlet public override var inputAccessoryView: UIView? {
         get {
             return _inputAccessoryView
         }
@@ -66,7 +64,7 @@ import UIKit
             _inputAccessoryView = newValue
         }
     }
-    
+
     public var isSecureTextEntry: Bool {
         get {
             return secureText
@@ -75,65 +73,61 @@ import UIKit
             secureText = newValue
         }
     }
-    
+
     //MARK: Private
-    private var labels: [UILabel] = []
-    private var underlines: [UIView] = []
-    private var backgrounds: [UIView] = []
-    
-    
+    fileprivate var labels: [UILabel] = []
+    fileprivate var underlines: [UIView] = []
+
+
     //MARK: Init and awake
     override init(frame: CGRect) {
         super.init(frame: frame)
         postInitialize()
     }
-    
+
     public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
-    
-    override open func awakeFromNib() {
+
+    override public func awakeFromNib() {
         super.awakeFromNib()
         postInitialize()
     }
-    
-    override open func prepareForInterfaceBuilder() {
+
+    override public func prepareForInterfaceBuilder() {
         postInitialize()
     }
-    
+
     private func postInitialize() {
         updateView()
     }
-    
+
     //MARK: Overrides
-    override open func layoutSubviews() {
+    override public func layoutSubviews() {
         layoutCharactersAndPlaceholders()
         super.layoutSubviews()
     }
-    
-    override open var canBecomeFirstResponder: Bool {
+
+    override public var canBecomeFirstResponder: Bool {
         return true
     }
-    
-    @discardableResult override open func becomeFirstResponder() -> Bool {
+
+    @discardableResult override public func becomeFirstResponder() -> Bool {
         delegate?.textFieldDidBeginEditing(self)
         return super.becomeFirstResponder()
     }
-    
-    @discardableResult override open func resignFirstResponder() -> Bool {
+
+    @discardableResult override public func resignFirstResponder() -> Bool {
         delegate?.textFieldDidEndEditing(self)
         return super.resignFirstResponder()
     }
-    
+
     //MARK: Private
-    private func updateView() {
-        if needToRecreateBackgrounds() {
-            recreateBackgrounds()
-        }
-        if needToRecreateUnderlines() {
+    fileprivate func updateView() {
+        if (needToRecreateUnderlines()) {
             recreateUnderlines()
         }
-        if needToRecreateLabels() {
+        if (needToRecreateLabels()) {
             recreateLabels()
         }
         updateLabels()
@@ -141,22 +135,17 @@ import UIKit
         if needToUpdateUnderlines {
             updateUnderlines()
         }
-        updateBackgrounds()
         setNeedsLayout()
     }
-    
+
     private func needToRecreateUnderlines() -> Bool {
         return characterLimit != underlines.count
     }
-    
+
     private func needToRecreateLabels() -> Bool {
         return characterLimit != labels.count
     }
-    
-    private func needToRecreateBackgrounds() -> Bool {
-        return characterLimit != backgrounds.count
-    }
-    
+
     private func recreateUnderlines() {
         underlines.forEach{ $0.removeFromSuperview() }
         underlines.removeAll()
@@ -166,7 +155,7 @@ import UIKit
             addSubview(underline)
         }
     }
-    
+
     private func recreateLabels() {
         labels.forEach{ $0.removeFromSuperview() }
         labels.removeAll()
@@ -176,17 +165,7 @@ import UIKit
             addSubview(label)
         }
     }
-    
-    private func recreateBackgrounds() {
-        backgrounds.forEach{ $0.removeFromSuperview() }
-        backgrounds.removeAll()
-        characterLimit.times {
-            let background = createBackground()
-            backgrounds.append(background)
-            addSubview(background)
-        }
-    }
-    
+
     private func updateLabels() {
         let textHelper = TextHelper(text: text, placeholder: placeholderText, isSecure: isSecureTextEntry)
         for label in labels {
@@ -203,30 +182,23 @@ import UIKit
         for label in labels {
             let index = labels.index(of: label) ?? 0
             if isPlaceholder(index) {
-                   underlines[index].backgroundColor = underlineColor
+                underlines[index].backgroundColor = underlineColor
             }
             else{
                 underlines[index].backgroundColor = updatedUnderlineColor
             }
         }
     }
-    
-    private func updateBackgrounds() {
-        for background in backgrounds {
-            background.backgroundColor = characterBackgroundColor
-            background.layer.cornerRadius = characterBackgroundCornerRadius
-        }
-    }
-    
+
     private func labelColor(isPlaceholder placeholder: Bool) -> UIColor {
         return placeholder ? placeholderColor : textColor
     }
-    
+
     private func isPlaceholder(_ i: Int) -> Bool {
         let inputTextCount = text?.count ?? 0
         return i >= inputTextCount
     }
-    
+
     private func createLabel() -> UILabel {
         let label = UILabel(frame: CGRect())
         label.font = font
@@ -234,40 +206,29 @@ import UIKit
         label.textAlignment = .center
         return label
     }
-    
+
     private func createUnderline() -> UIView {
         let underline = UIView()
         underline.backgroundColor = underlineColor
         return underline
     }
-    
-    private func createBackground() -> UIView {
-        let background = UIView()
-        background.backgroundColor = characterBackgroundColor
-        background.layer.cornerRadius = characterBackgroundCornerRadius
-        background.clipsToBounds = true
-        return background
-    }
-    
+
     private func layoutCharactersAndPlaceholders() {
         let marginsCount = characterLimit - 1
         let totalMarginsWidth = underlineHSpacing * CGFloat(marginsCount)
         let totalUnderlinesWidth = underlineWidth * CGFloat(characterLimit)
-        
+
         var currentUnderlineX: CGFloat = bounds.width / 2 - (totalUnderlinesWidth + totalMarginsWidth) / 2
         var currentLabelCenterX = currentUnderlineX + underlineWidth / 2
-        
+
         let totalLabelHeight = font.ascender + font.descender
         let underlineY = bounds.height / 2 + totalLabelHeight / 2 + underlineVMargin
-        
-        for i in 0..<underlines.count {
-            let underline = underlines[i]
-            let background = backgrounds[i]
-            underline.frame = CGRect(x: currentUnderlineX, y: underlineY, width: underlineWidth, height: underlineHeight)
-            background.frame = CGRect(x: currentUnderlineX, y: 0, width: underlineWidth, height: bounds.height)
+
+        underlines.forEach{
+            $0.frame = CGRect(x: currentUnderlineX, y: underlineY, width: underlineWidth, height: underlineHeight)
             currentUnderlineX += underlineWidth + underlineHSpacing
         }
-        
+
         labels.forEach {
             $0.sizeToFit()
             let labelWidth = $0.bounds.width
@@ -275,11 +236,11 @@ import UIKit
             $0.frame = CGRect(x: labelX, y: 0, width: labelWidth, height: bounds.height)
             currentLabelCenterX += underlineWidth + underlineHSpacing
         }
-        
+
     }
-    
+
     //MARK: Touches
-    override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else {
             return
         }
@@ -290,8 +251,8 @@ import UIKit
             }
         }
     }
-    
-    
+
+
     //MARK: Text processing
     func canInsertCharacter(_ character: String) -> Bool {
         let newText = text.map { $0 + character } ?? character
@@ -305,6 +266,7 @@ import UIKit
 
 //MARK: UIKeyInput
 extension PinCodeTextField: UIKeyInput {
+
     public var hasText: Bool {
         if let text = text {
             return !text.isEmpty
@@ -313,7 +275,7 @@ extension PinCodeTextField: UIKeyInput {
             return false
         }
     }
-    
+
     public func insertText(_ charToInsert: String) {
         if charToInsert.hasOnlyNewlineSymbols {
             if (delegate?.textFieldShouldReturn(self) ?? true) {
@@ -331,11 +293,20 @@ extension PinCodeTextField: UIKeyInput {
             }
         }
     }
-    
+
     public func deleteBackward() {
         guard hasText else { return }
         text?.removeLast()
         delegate?.textFieldValueChanged(self)
+    }
+
+    public var textContentType: UITextContentType? {
+        if #available(iOS 12.0, *) {
+            return .oneTimeCode
+        } else {
+            // Fallback on earlier versions
+            return nil
+        }
     }
 }
 
